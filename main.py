@@ -6,7 +6,7 @@ import numpy as np
 from collections import deque
 
 # 扫描半径
-EPS=0.95
+EPS=1
 # 最小包含点数
 MIN_PTS=8
 # 调整网格边长的参数，LPG=EPS/P,P为整数
@@ -51,15 +51,17 @@ def init():
     border=[(i[0],i[0]+((i[1]-i[0])//lpg+1)*lpg) for i in border]
     # 样本点到网格的映射
     data2grid=[[int((d[i]-border[i][0])/lpg) for i in range(len(d))] for d in data]
+    # 记录噪声点
+    noise=[1]*len(data)
     
     # print(data2grid)
-    return data,data2grid,visited,ex_grid,size
+    return data,data2grid,visited,ex_grid,size,noise
 
 
 def scan()->list:
     '''进行聚类'''
     
-    data,data2grid,visited,ex_grid,size=init()
+    data,data2grid,visited,ex_grid,size,noise=init()
     result=[] #聚类结果
     seeds=deque([]) #种子点队列
 
@@ -82,7 +84,7 @@ def scan()->list:
                     neibours.append(i)
             # eps矩形邻域的点不超过MIN_PTS
             if(count<MIN_PTS):
-                visited[crt]=-1
+                # visited[crt]=-1
                 continue
             count=0
             points=[]
@@ -92,19 +94,23 @@ def scan()->list:
                     points.append(n)
             # eps半径的点不超过MIN_PTS
             if(count<MIN_PTS):
-                visited[crt]=-1
+                # visited[crt]=-1
                 continue
+            
+            noise[crt]=0
+            for i in seeds:
+                noise[i]=0
             # 将eps半径邻域点加入seeds
             seeds.extend([i for i in points if not visited[i] and i not in seeds])
 
         result.append(temp.copy())
     
     # 以样本点索引形式返回,同时返回噪点
-    return result,visited
+    return result,noise
 
 if __name__=='__main__':
     res=scan()
-    print(res[0])
+    print(res)
     
     # a=np.array([[1,2],[3,4]])
     # print(np.max(a,axis=0))
